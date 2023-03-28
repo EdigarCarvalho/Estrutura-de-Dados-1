@@ -73,10 +73,11 @@ int main(){
     int key;
 
     while(1){                                                           //loop para inserir elementos na fila
-        if(elemento == 0)
-            break;
+        
         printf("\nDigite um elemento para ser adicionado na fila:");
         scanf(" %d",&elemento);
+        if(elemento == 0)
+            break;
         enqueue(elemento, &fila, tamanho);
     }  
     dequeue(&fila, tamanho);                                            //retira o primeiro elemento adicionado na fila
