@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 typedef struct Node {
     int dado;
@@ -26,11 +27,13 @@ void imprimirLista(Descritor* descritor) {
     }
 
     Node* atual = descritor->primeiro;
-
-    printf("Elementos da lista: ");
+    int i = 0;
+    printf("\nElementos da lista: \n");
+    
     while (atual != NULL) {
-        printf("%d ", atual->dado);
+        printf("[%d] %d \n", i, atual->dado);
         atual = atual->proximo;
+        i++;
     }
     printf("\n");
 }
@@ -92,23 +95,147 @@ void inserirLista(Descritor* descritor, int index, int dadoDoUsuario){
     }
 
     descritor->tamanho++;
-    printf("%d inserido no índice %d.\n", dadoDoUsuario, index);
+    printf("\n%d inserido no índice %d.\n", dadoDoUsuario, index);
+}
+
+void removerLista(Descritor * descritor, int index){
+    if (index < 0 || index >= descritor->tamanho) {
+        printf("O índice está fora do intervalo válido.\n");
+        return;
+    }
+
+    if(descritor->tamanho == 0){
+        printf("Nada para remover, lista vazia.\n");
+        return;
+    }
+
+    Node* destroyer;
+
+    if(index == 0){
+        destroyer = descritor->primeiro;
+        descritor->primeiro = descritor->primeiro->proximo;
+        if (descritor->primeiro != NULL)
+            descritor->primeiro->anterior = NULL;
+        if (descritor->ultimo == destroyer)
+            descritor->ultimo = NULL;
+
+    } else if(index == descritor->tamanho - 1) {
+        destroyer = descritor->ultimo;
+        descritor->ultimo = descritor->ultimo->anterior;
+        descritor->ultimo->proximo = NULL;
+        if (descritor->primeiro == destroyer)
+            descritor->primeiro = NULL;
+
+    } else {
+        Node* atual;
+        
+        if (index <= descritor->tamanho / 2) {
+            atual = descritor->primeiro;
+            for (int i = 0; i < index - 1; i++) {
+                atual = atual->proximo;
+            }
+
+        } else {
+            atual = descritor->ultimo;
+            for (int i = descritor->tamanho - 1; i > index + 1; i--) {
+                atual = atual->anterior;
+            }
+
+        }
+
+        destroyer = atual->proximo;
+        atual->proximo = destroyer->proximo;
+        destroyer->proximo->anterior = atual;
+    }
+
+    free(destroyer);
+    descritor->tamanho--;
+    printf("Elemento removido do índice %d.\n", index);
+}
+
+int buscar(Descritor* descritor, int key) {
+    if (descritor->tamanho == 0) {
+        printf("A lista esta vazia.\n");
+        return -1;
+    }
+
+    Node* atual = descritor->primeiro;
+    int i = 0;
+    
+    while (atual != NULL) {
+        if(key == atual->dado)
+            return i;
+
+        atual = atual->proximo;
+        i++;
+    }
+    return -1;
+}
+
+void wait(){
+    fflush(stdout);
+
+    char buffer[1];
+    read(STDIN_FILENO, buffer, 1);
 }
 
 int main() {
     Descritor lista;
     inicializarDescritor(&lista);
 
-    imprimirLista(&lista);
+    int opcao = -1;
+    int index, dado;
 
-    inserirLista(&lista, 0, 10);
-    inserirLista(&lista, 1, 20);
-    inserirLista(&lista, 1, 15);
-    inserirLista(&lista, 3, 25);
-    inserirLista(&lista, 0, 5);
-    inserirLista(&lista, 5, 30);
+    while (opcao != 0) {
+        system("clear");
+        printf("\nEscolha uma opção:\n\n"
+               "1. Inserir \n"
+               "2. Remover \n"
+               "3. Buscar \n"
+               "4. Imprimir \n"
+               "0. Sair\n\n"
+               "Opção: ");
+        scanf("%d", &opcao);
 
-    imprimirLista(&lista);
+        switch (opcao) {
+            case 1:
+                printf("\n(tamanho atual da lista: %d)"
+                    "\nInforme o valor e o índice: ", lista.tamanho);
+                scanf("%d %d", &dado, &index);
+                inserirLista(&lista, index, dado);
+                break;
+
+            case 2:
+                printf("Informe o índice do elemento a ser removido: ");
+                scanf("%d", &index);
+                removerLista(&lista, index);
+                break;
+
+            case 3:
+                printf("Informe o valor a ser buscado: ");
+                scanf("%d", &dado);
+                index = buscar(&lista, dado);
+                if (index != -1) {
+                    printf("O valor %d foi encontrado no índice %d.\n", dado, index);
+                } else {
+                    printf("O valor %d não foi encontrado na lista.\n", dado);
+                }
+                wait();
+                break;
+
+            case 4:
+                imprimirLista(&lista);
+                wait();
+                break;
+            case 0:
+                printf("\nFlw.\n");
+                break;
+            default:
+                printf("Digite uma opção válida :}.\n");
+                break;
+        }
+
+    }
 
     return 0;
 }
